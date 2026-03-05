@@ -449,7 +449,7 @@ export default function ZeroGame() {
 
             <button
               onClick={startGame}
-              className="group relative px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white text-base md:text-lg shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95"
+              className="group relative px-10 sm:px-14 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white text-lg sm:text-xl shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95 min-w-[200px] sm:min-w-[240px]"
             >
               <span className="relative z-10">CHƠI NGAY</span>
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
