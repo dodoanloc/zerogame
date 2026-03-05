@@ -409,6 +409,22 @@ export default function ZeroGame() {
   // Initialize on mount
   useEffect(() => {
     initGame();
+    // Force multiple resizes for mobile browsers
+    const timeouts = [100, 300, 500, 1000];
+    timeouts.forEach(delay => {
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const dpr = window.devicePixelRatio || 1;
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          canvas.style.width = width + "px";
+          canvas.style.height = height + "px";
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+        }
+      }, delay);
+    });
   }, [initGame]);
 
   return (
@@ -420,7 +436,12 @@ export default function ZeroGame() {
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none cursor-none"
-        style={{ touchAction: "none" }}
+        style={{ 
+          touchAction: "none",
+          width: "100%",
+          height: "100%",
+          display: "block"
+        }}
       />
 
       {/* UI Overlay */}
