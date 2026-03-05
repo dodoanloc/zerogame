@@ -457,18 +457,18 @@ export default function FlappyBird() {
               </div>
             )}
 
-            {/* Buttons - Large */}
-            <div className="flex flex-col gap-4 w-full max-w-sm md:max-w-md">
+            {/* Buttons - Large & Centered */}
+            <div className="flex flex-col items-center gap-4 w-full max-w-sm md:max-w-md mx-auto">
               <button
                 onClick={startGame}
-                className="w-full py-5 md:py-6 bg-gradient-to-b from-green-400 to-green-600 rounded-2xl font-black text-white text-2xl md:text-4xl shadow-[0_6px_0_#166534] active:shadow-none active:translate-y-2 transition-all border-b-8 border-green-700"
+                className="w-full max-w-xs md:max-w-sm py-6 md:py-8 bg-gradient-to-b from-green-400 to-green-600 rounded-2xl font-black text-white text-3xl md:text-5xl shadow-[0_8px_0_#166534] active:shadow-none active:translate-y-2 transition-all border-b-8 border-green-700"
               >
                 🔄 CHƠI LẠI
               </button>
 
               <button
                 onClick={resetGame}
-                className="w-full py-5 md:py-6 bg-gradient-to-b from-gray-400 to-gray-600 rounded-2xl font-black text-white text-2xl md:text-4xl shadow-[0_6px_0_#374151] active:shadow-none active:translate-y-2 transition-all border-b-8 border-gray-700"
+                className="w-full max-w-xs md:max-w-sm py-6 md:py-8 bg-gradient-to-b from-gray-400 to-gray-600 rounded-2xl font-black text-white text-3xl md:text-5xl shadow-[0_8px_0_#374151] active:shadow-none active:translate-y-2 transition-all border-b-8 border-gray-700"
               >
                 📋 MENU
               </button>
