@@ -372,37 +372,47 @@ export default function FlappyBird() {
         style={{ touchAction: "none" }}
       />
 
-      {/* Menu */}
+      {/* Menu - Full Screen */}
       {gameState === "menu" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4">
-          <div className="text-center space-y-6 md:space-y-8 animate-fade-in">
-            <div className="space-y-2">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-yellow-400 drop-shadow-lg">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-sky-400">
+          <div className="w-full h-full flex flex-col items-center justify-center px-6 py-8 animate-fade-in">
+            {/* Title */}
+            <div className="text-center mb-8 md:mb-12">
+              <h1 className="text-8xl sm:text-9xl md:text-[10rem] font-black text-yellow-400 drop-shadow-[0_6px_0_#F59E0B] tracking-tight leading-none">
                 FLAPPY
               </h1>
-              <p className="text-4xl md:text-6xl lg:text-7xl font-bold text-green-500 drop-shadow-lg">BIRD</p>
-            </div>
-
-            <div className="space-y-4">
-              <p className="text-white text-sm md:text-base max-w-xs md:max-w-md mx-auto px-2">
-                Chạm vào màn hình hoặc nhấn Space để bay
-                <br />
-                Vượt qua các ống mà không chạm vào
+              <p className="text-7xl sm:text-8xl md:text-9xl font-black text-green-500 drop-shadow-[0_6px_0_#16A34A] -mt-2 md:-mt-4">
+                BIRD
               </p>
-
-              {highScore > 0 && (
-                <div className="text-yellow-300 text-base md:text-lg">
-                  Điểm cao nhất: <span className="font-bold text-xl md:text-2xl">{highScore}</span>
-                </div>
-              )}
             </div>
 
+            {/* Instructions Card */}
+            <div className="w-full max-w-md md:max-w-xl bg-white/25 backdrop-blur-md rounded-3xl p-6 md:p-8 mb-8 border-4 border-white/30">
+              <div className="text-center space-y-4">
+                <p className="text-white text-xl md:text-3xl font-bold">
+                  👆 Chạm để bay
+                </p>
+                <p className="text-white/90 text-lg md:text-2xl">
+                  Vượt qua các ống xanh
+                </p>
+              </div>
+            </div>
+
+            {/* High Score */}
+            {highScore > 0 && (
+              <div className="mb-8">
+                <div className="bg-yellow-400/90 text-yellow-900 px-8 py-4 rounded-2xl font-black text-2xl md:text-4xl shadow-lg">
+                  🏆 {highScore}
+                </div>
+              </div>
+            )}
+
+            {/* Play Button - Large */}
             <button
               onClick={startGame}
-              className="group relative px-10 sm:px-14 py-4 sm:py-5 bg-gradient-to-r from-green-500 to-green-600 rounded-full font-bold text-white text-lg sm:text-xl shadow-lg shadow-green-500/50 hover:shadow-green-500/70 transition-all hover:scale-105 active:scale-95 min-w-[200px] sm:min-w-[240px]"
+              className="w-full max-w-sm md:max-w-md py-6 md:py-8 bg-gradient-to-b from-green-400 to-green-600 rounded-2xl font-black text-white text-3xl md:text-5xl shadow-[0_8px_0_#166534] active:shadow-none active:translate-y-2 transition-all border-b-8 border-green-700"
             >
-              <span className="relative z-10">CHƠI NGAY</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              ▶ CHƠI NGAY
             </button>
           </div>
         </div>
@@ -410,43 +420,57 @@ export default function FlappyBird() {
 
       {/* HUD */}
       {gameState === "playing" && (
-        <div className="absolute top-4 md:top-6 left-0 right-0 text-center z-10">
-          <div className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg">
-            {score}
+        <div className="absolute top-4 md:top-8 left-0 right-0 text-center z-10">
+          <div className="inline-block bg-white/20 backdrop-blur-sm px-8 py-3 rounded-full">
+            <span className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+              {score}
+            </span>
           </div>
         </div>
       )}
 
-      {/* Game Over */}
+      {/* Game Over - Full Screen */}
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/70 backdrop-blur-sm px-4">
-          <div className="text-center space-y-4 md:space-y-6 animate-fade-in">
-            <h2 className="text-4xl md:text-6xl font-bold text-red-500">GAME OVER</h2>
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/80">
+          <div className="w-full h-full flex flex-col items-center justify-center px-6 py-8 animate-fade-in">
+            {/* Game Over Title */}
+            <h2 className="text-6xl sm:text-7xl md:text-8xl font-black text-red-500 drop-shadow-[0_4px_0_#991B1B] mb-8">
+              GAME OVER
+            </h2>
 
-            <div className="space-y-2">
-              <div className="text-white text-base md:text-lg">Điểm của bạn</div>
-              <div className="text-5xl md:text-7xl font-bold text-yellow-400">{score}</div>
+            {/* Score Card */}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 md:p-12 mb-8 w-full max-w-md border-4 border-white/20">
+              <div className="text-center space-y-4">
+                <p className="text-white/80 text-xl md:text-3xl font-bold">Điểm của bạn</p>
+                <div className="text-7xl md:text-9xl font-black text-yellow-400 drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                  {score}
+                </div>
+              </div>
             </div>
 
+            {/* New Record */}
             {score >= highScore && score > 0 && (
-              <div className="text-yellow-400 text-lg md:text-xl font-bold animate-bounce">
-                🏆 KỶ LỤC MỚI!
+              <div className="mb-8 animate-bounce">
+                <div className="bg-yellow-400 text-yellow-900 px-8 py-4 rounded-2xl font-black text-2xl md:text-4xl shadow-lg">
+                  🏆 KỶ LỤC MỚI!
+                </div>
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
+            {/* Buttons - Large */}
+            <div className="flex flex-col gap-4 w-full max-w-sm md:max-w-md">
               <button
                 onClick={startGame}
-                className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-green-500 to-green-600 rounded-full font-bold text-white text-base md:text-lg shadow-lg shadow-green-500/50 hover:shadow-green-500/70 transition-all hover:scale-105 active:scale-95"
+                className="w-full py-5 md:py-6 bg-gradient-to-b from-green-400 to-green-600 rounded-2xl font-black text-white text-2xl md:text-4xl shadow-[0_6px_0_#166534] active:shadow-none active:translate-y-2 transition-all border-b-8 border-green-700"
               >
-                Chơi Lại
+                🔄 CHƠI LẠI
               </button>
 
               <button
                 onClick={resetGame}
-                className="px-6 md:px-8 py-3 md:py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full font-bold text-white text-base md:text-lg transition-all hover:scale-105 active:scale-95"
+                className="w-full py-5 md:py-6 bg-gradient-to-b from-gray-400 to-gray-600 rounded-2xl font-black text-white text-2xl md:text-4xl shadow-[0_6px_0_#374151] active:shadow-none active:translate-y-2 transition-all border-b-8 border-gray-700"
               >
-                Menu
+                📋 MENU
               </button>
             </div>
           </div>
