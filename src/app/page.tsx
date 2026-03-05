@@ -55,21 +55,38 @@ export default function ZeroGame() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
+    // Set canvas size with mobile viewport fix
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      playerRef.current.y = canvas.height - 150;
-      playerRef.current.x = canvas.width / 2;
-      playerRef.current.targetX = canvas.width / 2;
+      const dpr = window.devicePixelRatio || 1;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      // Set display size (css pixels)
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      
+      // Set actual size in memory (scaled to account for extra pixel density)
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      
+      // Normalize coordinate system to use css pixels
+      ctx.scale(dpr, dpr);
+      
+      playerRef.current.y = height - 150;
+      playerRef.current.x = width / 2;
+      playerRef.current.targetX = width / 2;
     };
+    
     resize();
     window.addEventListener("resize", resize);
+    
+    // Force resize after a short delay for mobile browsers
+    setTimeout(resize, 100);
 
     // Initialize stars
     starsRef.current = Array.from({ length: 100 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * canvas.width / (window.devicePixelRatio || 1),
+      y: Math.random() * canvas.height / (window.devicePixelRatio || 1),
       size: Math.random() * 2 + 0.5,
       speed: Math.random() * 0.5 + 0.1,
       brightness: Math.random(),
@@ -86,20 +103,31 @@ export default function ZeroGame() {
     const handleTouch = (e: TouchEvent) => {
       e.preventDefault();
       const touch = e.touches[0];
-      playerRef.current.targetX = touch.clientX;
+      const rect = canvas.getBoundingClientRect();
+      playerRef.current.targetX = touch.clientX - rect.left;
     };
 
     const handleMouse = (e: MouseEvent) => {
-      playerRef.current.targetX = e.clientX;
+      const rect = canvas.getBoundingClientRect();
+      playerRef.current.targetX = e.clientX - rect.left;
     };
 
-    canvas.addEventListener("touchmove", handleTouch, { passive: false });
+    // Add touch events to document for better mobile response
     canvas.addEventListener("touchstart", handleTouch, { passive: false });
+    canvas.addEventListener("touchmove", handleTouch, { passive: false });
+    canvas.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
     canvas.addEventListener("mousemove", handleMouse);
+    
+    // Prevent default touch behaviors
+    document.body.addEventListener("touchmove", (e) => {
+      if (e.target === canvas) {
+        e.preventDefault();
+      }
+    }, { passive: false });
 
     return () => {
-      canvas.removeEventListener("touchmove", handleTouch);
       canvas.removeEventListener("touchstart", handleTouch);
+      canvas.removeEventListener("touchmove", handleTouch);
       canvas.removeEventListener("mousemove", handleMouse);
     };
   }, []);
@@ -113,19 +141,25 @@ export default function ZeroGame() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const dpr = window.devicePixelRatio || 1;
+    const getWidth = () => canvas.width / dpr;
+    const getHeight = () => canvas.height / dpr;
+
     const gameLoop = () => {
       frameCountRef.current++;
+      const width = getWidth();
+      const height = getHeight();
 
       // Clear canvas
       ctx.fillStyle = "rgba(5, 5, 15, 0.3)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
 
       // Draw and update stars
       starsRef.current.forEach((star) => {
         star.y += star.speed * (1 + levelRef.current * 0.1);
-        if (star.y > canvas.height) {
+        if (star.y > height) {
           star.y = 0;
-          star.x = Math.random() * canvas.width;
+          star.x = Math.random() * width;
         }
 
         ctx.beginPath();
@@ -137,7 +171,7 @@ export default function ZeroGame() {
       // Update player position with smooth interpolation
       const player = playerRef.current;
       player.x += (player.targetX - player.x) * 0.15;
-      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+      player.x = Math.max(player.size, Math.min(width - player.size, player.x));
 
       // Draw player (spaceship)
       ctx.save();
@@ -199,7 +233,7 @@ export default function ZeroGame() {
         const types: Obstacle["type"][] = ["meteor", "crystal", "comet"];
         const type = types[Math.floor(Math.random() * types.length)];
         obstaclesRef.current.push({
-          x: Math.random() * (canvas.width - 40) + 20,
+          x: Math.random() * (width - 40) + 20,
           y: -50,
           size: type === "comet" ? 25 : 20 + Math.random() * 20,
           speed: (2 + Math.random() * 2) * (1 + levelRef.current * 0.15),
@@ -314,7 +348,7 @@ export default function ZeroGame() {
         }
 
         // Score for dodging
-        if (obstacle.y > canvas.height) {
+        if (obstacle.y > height) {
           scoreRef.current += 10;
           setScore(scoreRef.current);
 
@@ -378,7 +412,7 @@ export default function ZeroGame() {
   }, [initGame]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[#05050f]">
+    <div className="fixed inset-0 w-full h-[100dvh] overflow-hidden bg-[#05050f]">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#05050f] to-[#0a0a2a]" />
 

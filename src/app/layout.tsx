@@ -1,4 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#05050f",
+};
 
 export const metadata: Metadata = {
   title: "Zero Gravity - Space Arcade Game",
@@ -12,10 +22,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#05050f" />
-      </head>
       <body className="m-0 p-0 overflow-hidden">{children}</body>
     </html>
   );
