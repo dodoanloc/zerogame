@@ -32,7 +32,7 @@ interface Star {
 
 export default function ZeroGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number | null>(null);
   const [gameState, setGameState] = useState<"menu" | "playing" | "gameOver">("menu");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
