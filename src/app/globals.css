@@ -8,10 +8,19 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
 body {
   width: 100%;
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: #05050f;
   touch-action: none;
@@ -22,6 +31,9 @@ body {
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
 }
 
 #root,
@@ -35,16 +47,11 @@ canvas {
   touch-action: none;
 }
 
-/* Mobile viewport fix */
+/* Mobile viewport fix - force full viewport */
 @supports (height: 100dvh) {
-  .h-screen {
+  html, body {
     height: 100dvh;
   }
-}
-
-/* Prevent pull-to-refresh on mobile */
-body {
-  overscroll-behavior: none;
 }
 
 /* Animation for fade-in */

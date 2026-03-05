@@ -428,7 +428,8 @@ export default function ZeroGame() {
   }, [initGame]);
 
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] overflow-hidden bg-[#05050f]">
+    <div className="fixed inset-0 w-full h-full min-h-screen overflow-hidden bg-[#05050f]"
+         style={{ touchAction: 'none' }}>
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#05050f] to-[#0a0a2a]" />
 
