@@ -8,12 +8,12 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#05050f",
+  themeColor: "#4FC3F7",
 };
 
 export const metadata: Metadata = {
-  title: "Zero Gravity - Space Arcade Game",
-  description: "Một game arcade vũ trụ với thao tác vuốt trượt đơn giản. Né tránh thiên thạch và thu thập điểm!",
+  title: "Flappy Bird - Game vui nhộn",
+  description: "Game Flappy Bird phiên bản web. Chạm để bay, vượt qua các ống và ghi điểm cao!",
 };
 
 export default function RootLayout({
