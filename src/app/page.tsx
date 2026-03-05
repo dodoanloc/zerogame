@@ -32,11 +32,13 @@ interface Star {
 
 export default function ZeroGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const gameLoopRef = useRef<number | null>(null);
   const [gameState, setGameState] = useState<"menu" | "playing" | "gameOver">("menu");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [level, setLevel] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Game refs
   const playerRef = useRef({ x: 0, y: 0, targetX: 0, size: 30 });
@@ -46,54 +48,72 @@ export default function ZeroGame() {
   const scoreRef = useRef(0);
   const levelRef = useRef(1);
   const frameCountRef = useRef(0);
+  const scaleRef = useRef(1);
+  const dimensionsRef = useRef({ width: 0, height: 0 });
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || 'ontouchstart' in window;
+      setIsMobile(mobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize canvas and game
   const initGame = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size with mobile viewport fix
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const rect = container.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
       
-      // Set display size (css pixels)
+      dimensionsRef.current = { width, height };
+      
+      // Calculate scale based on screen size (base width 375px for mobile)
+      const baseWidth = Math.min(375, width);
+      scaleRef.current = width / baseWidth;
+      
+      // Set canvas display size
       canvas.style.width = width + "px";
       canvas.style.height = height + "px";
       
-      // Set actual size in memory (scaled to account for extra pixel density)
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
+      // Set canvas actual size (no DPR scaling for simplicity)
+      canvas.width = width;
+      canvas.height = height;
       
-      // Normalize coordinate system to use css pixels
-      ctx.scale(dpr, dpr);
-      
-      playerRef.current.y = height - 150;
+      // Update player position
+      playerRef.current.y = height - (isMobile ? 100 : 150);
       playerRef.current.x = width / 2;
       playerRef.current.targetX = width / 2;
+      playerRef.current.size = isMobile ? 25 : 30;
     };
     
     resize();
     window.addEventListener("resize", resize);
     
-    // Force resize after a short delay for mobile browsers
-    setTimeout(resize, 100);
+    // Multiple resize attempts for mobile
+    [100, 300, 500, 1000].forEach(t => setTimeout(resize, t));
 
     // Initialize stars
     starsRef.current = Array.from({ length: 100 }, () => ({
-      x: Math.random() * canvas.width / (window.devicePixelRatio || 1),
-      y: Math.random() * canvas.height / (window.devicePixelRatio || 1),
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
       size: Math.random() * 2 + 0.5,
       speed: Math.random() * 0.5 + 0.1,
       brightness: Math.random(),
     }));
 
     return () => window.removeEventListener("resize", resize);
-  }, []);
+  }, [isMobile]);
 
   // Handle input
   useEffect(() => {
@@ -112,18 +132,10 @@ export default function ZeroGame() {
       playerRef.current.targetX = e.clientX - rect.left;
     };
 
-    // Add touch events to document for better mobile response
     canvas.addEventListener("touchstart", handleTouch, { passive: false });
     canvas.addEventListener("touchmove", handleTouch, { passive: false });
     canvas.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
     canvas.addEventListener("mousemove", handleMouse);
-    
-    // Prevent default touch behaviors
-    document.body.addEventListener("touchmove", (e) => {
-      if (e.target === canvas) {
-        e.preventDefault();
-      }
-    }, { passive: false });
 
     return () => {
       canvas.removeEventListener("touchstart", handleTouch);
@@ -141,14 +153,12 @@ export default function ZeroGame() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const getWidth = () => canvas.width / dpr;
-    const getHeight = () => canvas.height / dpr;
+    const { width, height } = dimensionsRef.current;
+    const scale = scaleRef.current;
+    const playerSize = playerRef.current.size;
 
     const gameLoop = () => {
       frameCountRef.current++;
-      const width = getWidth();
-      const height = getHeight();
 
       // Clear canvas
       ctx.fillStyle = "rgba(5, 5, 15, 0.3)";
@@ -168,16 +178,16 @@ export default function ZeroGame() {
         ctx.fill();
       });
 
-      // Update player position with smooth interpolation
+      // Update player position
       const player = playerRef.current;
       player.x += (player.targetX - player.x) * 0.15;
-      player.x = Math.max(player.size, Math.min(width - player.size, player.x));
+      player.x = Math.max(playerSize, Math.min(width - playerSize, player.x));
 
       // Draw player (spaceship)
       ctx.save();
       ctx.translate(player.x, player.y);
 
-      // Engine trail particles
+      // Engine trail
       if (frameCountRef.current % 3 === 0) {
         particlesRef.current.push({
           x: player.x + (Math.random() - 0.5) * 10,
@@ -190,7 +200,7 @@ export default function ZeroGame() {
         });
       }
 
-      // Draw spaceship body
+      // Spaceship body
       const gradient = ctx.createLinearGradient(0, -20, 0, 20);
       gradient.addColorStop(0, "#00d4ff");
       gradient.addColorStop(0.5, "#0099cc");
@@ -235,8 +245,8 @@ export default function ZeroGame() {
         obstaclesRef.current.push({
           x: Math.random() * (width - 40) + 20,
           y: -50,
-          size: type === "comet" ? 25 : 20 + Math.random() * 20,
-          speed: (2 + Math.random() * 2) * (1 + levelRef.current * 0.15),
+          size: (type === "comet" ? 25 : 20 + Math.random() * 20) * (isMobile ? 0.8 : 1),
+          speed: (2 + Math.random() * 2) * (1 + levelRef.current * 0.15) * scale,
           rotation: 0,
           rotationSpeed: (Math.random() - 0.5) * 0.1,
           type,
@@ -248,13 +258,11 @@ export default function ZeroGame() {
         obstacle.y += obstacle.speed;
         obstacle.rotation += obstacle.rotationSpeed;
 
-        // Draw obstacle
         ctx.save();
         ctx.translate(obstacle.x, obstacle.y);
         ctx.rotate(obstacle.rotation);
 
         if (obstacle.type === "meteor") {
-          // Meteor
           const meteorGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, obstacle.size);
           meteorGradient.addColorStop(0, "#ff6b6b");
           meteorGradient.addColorStop(0.5, "#ee5a5a");
@@ -273,13 +281,11 @@ export default function ZeroGame() {
           ctx.fillStyle = meteorGradient;
           ctx.fill();
 
-          // Craters
           ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
           ctx.beginPath();
           ctx.arc(-obstacle.size * 0.3, -obstacle.size * 0.2, obstacle.size * 0.2, 0, Math.PI * 2);
           ctx.fill();
         } else if (obstacle.type === "crystal") {
-          // Crystal
           const crystalGradient = ctx.createLinearGradient(-obstacle.size, -obstacle.size, obstacle.size, obstacle.size);
           crystalGradient.addColorStop(0, "#a855f7");
           crystalGradient.addColorStop(0.5, "#c084fc");
@@ -298,7 +304,6 @@ export default function ZeroGame() {
           ctx.lineWidth = 2;
           ctx.stroke();
         } else {
-          // Comet
           const cometGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, obstacle.size);
           cometGradient.addColorStop(0, "#fbbf24");
           cometGradient.addColorStop(0.5, "#f59e0b");
@@ -309,7 +314,6 @@ export default function ZeroGame() {
           ctx.fillStyle = cometGradient;
           ctx.fill();
 
-          // Tail
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(-obstacle.size * 2, -obstacle.size * 3);
@@ -326,8 +330,7 @@ export default function ZeroGame() {
         const dy = player.y - obstacle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < player.size + obstacle.size * 0.7) {
-          // Create explosion particles
+        if (distance < playerSize + obstacle.size * 0.7) {
           for (let i = 0; i < 20; i++) {
             particlesRef.current.push({
               x: obstacle.x,
@@ -347,18 +350,14 @@ export default function ZeroGame() {
           return false;
         }
 
-        // Score for dodging
         if (obstacle.y > height) {
           scoreRef.current += 10;
           setScore(scoreRef.current);
-
-          // Level up every 100 points
           const newLevel = Math.floor(scoreRef.current / 100) + 1;
           if (newLevel > levelRef.current) {
             levelRef.current = newLevel;
             setLevel(newLevel);
           }
-
           return false;
         }
 
@@ -392,9 +391,8 @@ export default function ZeroGame() {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [gameState, highScore]);
+  }, [gameState, highScore, isMobile]);
 
-  // Start game
   const startGame = () => {
     setGameState("playing");
     setScore(0);
@@ -406,73 +404,52 @@ export default function ZeroGame() {
     particlesRef.current = [];
   };
 
-  // Initialize on mount
   useEffect(() => {
     initGame();
-    // Force multiple resizes for mobile browsers
-    const timeouts = [100, 300, 500, 1000];
-    timeouts.forEach(delay => {
-      setTimeout(() => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-          const dpr = window.devicePixelRatio || 1;
-          const width = window.innerWidth;
-          const height = window.innerHeight;
-          canvas.style.width = width + "px";
-          canvas.style.height = height + "px";
-          canvas.width = Math.floor(width * dpr);
-          canvas.height = Math.floor(height * dpr);
-        }
-      }, delay);
-    });
   }, [initGame]);
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen overflow-hidden bg-[#05050f]"
-         style={{ touchAction: 'none' }}>
-      {/* Background gradient */}
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 w-full h-full overflow-hidden bg-[#05050f]"
+      style={{ touchAction: 'none' }}
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#05050f] to-[#0a0a2a]" />
 
-      {/* Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 touch-none cursor-none"
-        style={{ 
-          touchAction: "none",
-          width: "100%",
-          height: "100%",
-          display: "block"
-        }}
+        className="absolute inset-0 touch-none"
+        style={{ touchAction: "none" }}
       />
 
-      {/* UI Overlay */}
+      {/* Menu */}
       {gameState === "menu" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-          <div className="text-center space-y-8 animate-fade-in">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4">
+          <div className="text-center space-y-6 md:space-y-8 animate-fade-in">
             <div className="space-y-2">
-              <h1 className="text-6xl sm:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent animate-pulse">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent animate-pulse">
                 ZERO
               </h1>
-              <p className="text-xl sm:text-2xl text-cyan-300 tracking-[0.3em]">GRAVITY</p>
+              <p className="text-lg md:text-xl lg:text-2xl text-cyan-300 tracking-[0.3em]">GRAVITY</p>
             </div>
 
             <div className="space-y-4">
-              <p className="text-slate-400 text-sm sm:text-base max-w-md px-4">
+              <p className="text-slate-400 text-sm md:text-base max-w-xs md:max-w-md mx-auto px-2">
                 Vuốt hoặc di chuyển chuột để điều khiển phi thuyền
                 <br />
                 Né tránh thiên thạch và thu thập điểm
               </p>
 
               {highScore > 0 && (
-                <div className="text-cyan-400 text-lg">
-                  Điểm cao nhất: <span className="font-bold text-2xl">{highScore}</span>
+                <div className="text-cyan-400 text-base md:text-lg">
+                  Điểm cao nhất: <span className="font-bold text-xl md:text-2xl">{highScore}</span>
                 </div>
               )}
             </div>
 
             <button
               onClick={startGame}
-              className="group relative px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white text-lg shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95"
+              className="group relative px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white text-base md:text-lg shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95"
             >
               <span className="relative z-10">CHƠI NGAY</span>
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -483,51 +460,51 @@ export default function ZeroGame() {
 
       {/* HUD */}
       {gameState === "playing" && (
-        <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-start z-10">
+        <div className="absolute top-0 left-0 right-0 p-3 md:p-6 flex justify-between items-start z-10">
           <div className="flex flex-col gap-1">
-            <div className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
+            <div className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">
               {score.toString().padStart(6, "0")}
             </div>
-            <div className="text-cyan-400 text-sm sm:text-base">
+            <div className="text-cyan-400 text-xs md:text-base">
               LEVEL {level}
             </div>
           </div>
 
           <div className="text-right">
-            <div className="text-slate-400 text-xs sm:text-sm">High Score</div>
-            <div className="text-xl sm:text-2xl font-bold text-slate-300">{highScore}</div>
+            <div className="text-slate-400 text-xs md:text-sm">High Score</div>
+            <div className="text-lg md:text-2xl font-bold text-slate-300">{highScore}</div>
           </div>
         </div>
       )}
 
       {/* Game Over */}
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/60 backdrop-blur-sm">
-          <div className="text-center space-y-6 animate-fade-in">
-            <h2 className="text-5xl sm:text-6xl font-bold text-red-500">GAME OVER</h2>
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/60 backdrop-blur-sm px-4">
+          <div className="text-center space-y-4 md:space-y-6 animate-fade-in">
+            <h2 className="text-4xl md:text-6xl font-bold text-red-500">GAME OVER</h2>
 
             <div className="space-y-2">
-              <div className="text-slate-400 text-lg">Điểm của bạn</div>
-              <div className="text-5xl sm:text-6xl font-bold text-white">{score}</div>
+              <div className="text-slate-400 text-base md:text-lg">Điểm của bạn</div>
+              <div className="text-4xl md:text-6xl font-bold text-white">{score}</div>
             </div>
 
             {score >= highScore && score > 0 && (
-              <div className="text-yellow-400 text-xl font-bold animate-bounce">
+              <div className="text-yellow-400 text-lg md:text-xl font-bold animate-bounce">
                 🏆 KỶ LỤC MỚI!
               </div>
             )}
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
               <button
                 onClick={startGame}
-                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95"
+                className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-white text-sm md:text-base shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all hover:scale-105 active:scale-95"
               >
                 Chơi Lại
               </button>
 
               <button
                 onClick={() => setGameState("menu")}
-                className="px-8 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full font-bold text-white transition-all hover:scale-105 active:scale-95"
+                className="px-6 md:px-8 py-2.5 md:py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full font-bold text-white text-sm md:text-base transition-all hover:scale-105 active:scale-95"
               >
                 Menu
               </button>
@@ -538,7 +515,7 @@ export default function ZeroGame() {
 
       {/* Touch hint */}
       {gameState === "playing" && (
-        <div className="absolute bottom-4 left-0 right-0 text-center text-slate-500 text-xs sm:text-sm animate-pulse">
+        <div className="absolute bottom-4 left-0 right-0 text-center text-slate-500 text-xs md:text-sm animate-pulse">
           Vuốt để di chuyển
         </div>
       )}

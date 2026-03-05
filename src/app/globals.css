@@ -14,6 +14,8 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -26,7 +28,6 @@ body {
   touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
@@ -45,13 +46,8 @@ body {
 canvas {
   display: block;
   touch-action: none;
-}
-
-/* Mobile viewport fix - force full viewport */
-@supports (height: 100dvh) {
-  html, body {
-    height: 100dvh;
-  }
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Animation for fade-in */
@@ -68,4 +64,11 @@ canvas {
 
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Ensure proper mobile viewport */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
 }
